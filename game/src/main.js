@@ -40,7 +40,7 @@ function draw(world) {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.setTransform(dpr * scale, 0, 0, dpr * scale, dpr * offsetX, dpr * offsetY);
   drawWorld(ctx, world.state, world.moveAlpha());
-  drawHud(ctx, world.state);
+  drawHud(ctx, world.state, world.moveAlpha());
   ctx.setTransform(1, 0, 0, 1, 0, 0);
 }
 

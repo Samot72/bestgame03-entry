@@ -3,6 +3,7 @@
 // level-complete, victory, defeat and pause panels. Drawn after the world.
 
 import { BEDS, COLORS, COMBO_WINDOW, VIEW_H, VIEW_W } from './config.js';
+import { drawWorm } from './render.js';
 import { SCREEN_LEVEL, SCREEN_OVER, SCREEN_PLAY, SCREEN_TITLE, SCREEN_WIN } from './world.js';
 
 const FONT = 'system-ui, -apple-system, "Segoe UI", sans-serif';
@@ -49,9 +50,11 @@ function drawBar(ctx, state) {
   if (state.audio.muted) text(ctx, 'MUTED (M)', VIEW_W - 22, 74, 15, '#b9d99a', 'right', false);
 }
 
-function drawTitle(ctx, state) {
+function drawTitle(ctx, state, alpha) {
   ctx.fillStyle = 'rgba(24, 38, 20, 0.45)';
   ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+  // The mascot worm again, over the dim, in its true coral pink.
+  drawWorm(ctx, state, alpha);
   text(ctx, 'WIGGLE WORM', VIEW_W / 2, 218, 92, COLORS.cream);
   text(ctx, '🍎  Garden Feast  🍎', VIEW_W / 2, 292, 40, COLORS.golden);
   text(ctx, 'Eat apples to grow through 5 garden beds.', VIEW_W / 2, 372, 25, COLORS.cream, 'center', false);
@@ -91,9 +94,9 @@ function drawPaused(ctx) {
   text(ctx, 'Press P to keep wiggling', VIEW_W / 2, y + 142, 22, COLORS.golden, 'center', false);
 }
 
-export function drawHud(ctx, state) {
+export function drawHud(ctx, state, alpha = 1) {
   if (state.screen === SCREEN_TITLE) {
-    drawTitle(ctx, state);
+    drawTitle(ctx, state, alpha);
     return;
   }
   drawBar(ctx, state);

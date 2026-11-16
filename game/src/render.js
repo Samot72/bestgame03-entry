@@ -1,8 +1,9 @@
 // Wiggle Worm's world renderer: the garden bed (checkerboard grass, a
 // wooden fence, flowers), rocks, apples, the golden gate, and the worm
-// itself — drawn tail to head as overlapping circles sliding smoothly
-// between grid ticks, with a face on the head: eyes that look where it is
-// going, a smile, and blush. Pure canvas, no assets.
+// itself — drawn tail to head as overlapping coral-pink circles sliding
+// smoothly between grid ticks, a darker red band at every segment joint,
+// a lighter sheen along the top, and a face on the head: one big eye
+// riding on top, a friendly smile, and blush. Pure canvas, no assets.
 
 import { CELL, COLORS, COLS, ROWS } from './config.js';
 import { segmentPixel } from './worm.js';
@@ -137,21 +138,45 @@ function drawGate(ctx, state) {
 export function drawWorm(ctx, state, alpha) {
   const worm = state.worm;
   const n = worm.segments.length;
+  const pts = [];
+  for (let i = 0; i < n; i += 1) pts.push(segmentPixel(worm, i, alpha));
   // Tail first so the head sits on top.
   for (let i = n - 1; i >= 0; i -= 1) {
-    const { x, y } = segmentPixel(worm, i, alpha);
+    const { x, y } = pts[i];
     const frac = n <= 1 ? 0 : i / (n - 1); // 0 head → 1 tail
-    const r = CELL * (0.48 - 0.12 * frac);
-    ctx.fillStyle = i % 2 === 0 ? COLORS.wormB : COLORS.wormA;
+    const r = CELL * (0.48 - 0.12 * frac) * (i === 0 ? 1.14 : 1);
+    // This segment's local heading, from its neighbours, so the band can
+    // sit across the body at the joint like a ring on an earthworm.
+    const ahead = pts[Math.max(0, i - 1)];
+    const behind = pts[Math.min(n - 1, i + 1)];
+    let dx = ahead.x - behind.x;
+    let dy = ahead.y - behind.y;
+    const len = Math.hypot(dx, dy) || 1;
+    dx /= len;
+    dy /= len;
+    ctx.fillStyle = COLORS.wormA;
     ctx.beginPath();
     ctx.arc(x, y, r, 0, Math.PI * 2);
     ctx.fill();
     if (i > 0) {
-      ctx.fillStyle = COLORS.wormBelly;
+      // The darker red band at this segment's tail-side joint.
+      ctx.save();
+      ctx.translate(x - dx * r * 0.55, y - dy * r * 0.55);
+      ctx.rotate(Math.atan2(dy, dx));
+      ctx.fillStyle = COLORS.wormBand;
       ctx.beginPath();
-      ctx.ellipse(x, y + r * 0.38, r * 0.52, r * 0.34, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, r * 0.26, r * 0.97, 0, 0, Math.PI * 2);
       ctx.fill();
+      ctx.restore();
     }
+    // A lighter coral sheen along the top, the reference's flat shading.
+    ctx.save();
+    ctx.globalAlpha = 0.5;
+    ctx.fillStyle = COLORS.wormB;
+    ctx.beginPath();
+    ctx.ellipse(x, y - r * 0.36, r * 0.56, r * 0.32, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
   }
   drawFace(ctx, state, alpha);
 }
@@ -160,37 +185,37 @@ function drawFace(ctx, state, alpha) {
   const worm = state.worm;
   const { x, y } = segmentPixel(worm, 0, alpha);
   const dir = worm.dir;
-  const px = -dir.y; // perpendicular
-  const py = dir.x;
-  const look = 3.2;
-  for (const side of [-1, 1]) {
-    const ex = x + px * side * 8 + dir.x * 4;
-    const ey = y + py * side * 8 + dir.y * 4 - 3;
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.arc(ex, ey, 6.4, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = COLORS.ink;
-    ctx.beginPath();
-    ctx.arc(ex + dir.x * look, ey + dir.y * look, 3.1, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  // Smile, rotated to the heading.
+  const r = CELL * 0.48 * 1.14; // the head's radius, as drawn in drawWorm
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(Math.atan2(dir.y, dir.x));
+  // One big eye riding on top of the head: a white ball with a dark pupil
+  // looking the way the worm wiggles, and a tiny glint.
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(r * 0.18, -r * 0.52, r * 0.40, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = COLORS.ink;
+  ctx.beginPath();
+  ctx.arc(r * 0.31, -r * 0.52, r * 0.20, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(r * 0.37, -r * 0.61, r * 0.07, 0, Math.PI * 2);
+  ctx.fill();
+  // The friendly smile, low on the snout.
   ctx.strokeStyle = COLORS.ink;
-  ctx.lineWidth = 2.2;
+  ctx.lineWidth = 2.4;
   ctx.lineCap = 'round';
   ctx.beginPath();
-  const mx = x + dir.x * 9;
-  const my = y + dir.y * 9 + 3;
-  ctx.arc(mx, my, 6.5, Math.atan2(dir.y, dir.x) - 0.7 + Math.PI / 2 * 0, Math.atan2(dir.y, dir.x) + 0.7);
+  ctx.arc(r * 0.34, r * 0.14, r * 0.34, Math.PI * 0.15, Math.PI * 0.85);
   ctx.stroke();
-  // Blush.
+  // Blush on the cheek.
   ctx.fillStyle = COLORS.blush;
-  for (const side of [-1, 1]) {
-    ctx.beginPath();
-    ctx.ellipse(x + px * side * 13 + dir.x * 2, y + py * side * 13 + dir.y * 2 + 3, 4.4, 2.8, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
+  ctx.beginPath();
+  ctx.ellipse(-r * 0.30, r * 0.36, r * 0.30, r * 0.17, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
 }
 
 function drawFx(ctx, state) {

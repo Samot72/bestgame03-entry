@@ -152,7 +152,7 @@ export function createWorld(audio, seed = (Math.random() * 1e9) | 0) {
     const cx = (head.x + 0.5) * 40;
     const cy = (head.y + 0.5) * 40;
     state.fx.burst(cx, cy, '#e33f2f', 26, 1.3);
-    state.fx.burst(cx, cy, '#57b765', 18, 1);
+    state.fx.burst(cx, cy, '#f26d64', 18, 1);
     state.shake = 0.55;
     audio.die();
     finishRun(false);

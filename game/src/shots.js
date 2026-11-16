@@ -131,7 +131,7 @@ export function stageShot(name, world) {
     state.screen = SCREEN_OVER;
     const head = state.worm.segments[0];
     state.fx.burst((head.x + 0.5) * 40, (head.y + 0.5) * 40, '#e33f2f', 22, 1.3);
-    state.fx.burst((head.x + 0.5) * 40, (head.y + 0.5) * 40, '#57b765', 14, 1);
+    state.fx.burst((head.x + 0.5) * 40, (head.y + 0.5) * 40, '#f26d64', 14, 1);
     state.fx.step(0.18);
     return makeFakeInput();
   }
